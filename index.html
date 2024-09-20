@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Idle RPG Game</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <div id="game-area">
+            <div id="player">
+                <div id="attack-range"></div>
+            </div>
+            <!-- Enemies will be added here dynamically -->
+        </div>
+    </div>
+    <div id="game-ui">
+        <div id="timer">Time: 0:00</div>
+        <div id="player-stats">
+            <div id="level">Level: 1</div>
+            <div id="hp-bar">
+                <div id="hp-value">HP: 100 / 100</div>
+                <div id="hp-bar-fill"></div>
+            </div>
+            <div id="damage">Damage: 1</div>
+            <div id="aoe">AoE: 1</div>
+            <div id="attack-speed">Attack Speed: 1</div>
+            <div id="hp-regen">HP Regen: 1</div>
+            <div id="armour">Armour: 1</div>
+            <div id="crit-chance">Crit: 5.0%</div>
+            <div id="crit-multiplier">Crit Multi: 150%</div>
+        </div>
+        <div id="exp-bar">
+            <div id="exp-bar-fill"></div>
+            <div id="exp-value">EXP: 0 / 10</div>
+        </div>
+        <div id="pause-overlay">Paused</div>
+        <div id="game-over-overlay">
+            Game Over<br>
+            Press any key to restart
+        </div>
+        <div id="ability-choices-overlay">
+            <div id="ability-button-wrapper" class="ability-button-wrapper">
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
