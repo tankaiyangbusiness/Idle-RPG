@@ -23,8 +23,8 @@ body, html {
 
 #player {
     position: absolute;
-    width: 50px;
-    height: 50px;
+    width: 75px;
+    height: 75px;
     background-color: #3498db;
     border-radius: 50%;
     transform: translate(-50%, -50%);
@@ -32,50 +32,47 @@ body, html {
 
 .player-attack-range {
     position: absolute;
-    border: 2px dashed rgba(255, 255, 255, 0.5);
+    border: 0.4vw dashed rgba(255, 255, 255, 0.5);
     border-radius: 50%;
+    transform: translate(-50%, -50%);
     pointer-events: none;
     z-index: 1;
 }
 
 .enemy {
     position: absolute;
-    width: 30px;
-    height: 30px;
+    width: 40px;
+    height: 40px;
     background-color: #e74c3c;
     border-radius: 50%;
     transform: translate(-50%, -50%);
-    transition: left 0.1s linear, top 0.1s linear;
 }
 
 .rare-enemy {
     position: absolute;
-    width: 40px;
-    height: 40px;
+    width: 55px;
+    height: 55px;
     background-color: #ff251e;
     border-radius: 50%;
     transform: translate(-50%, -50%);
-    transition: left 0.1s linear, top 0.1s linear;
 }
 
 .elite {
     position: absolute;
-    width: 50px;
-    height: 50px;
+    width: 70px;
+    height: 70px;
     background-color: #ff2b13d0;
     border-radius: 50%;
     transform: translate(-50%, -50%);
-    transition: left 0.1s linear, top 0.1s linear;
 }
 
 .boss {
     position: absolute;
-    width: 70px;
-    height: 70px;
+    width: 90px;
+    height: 90px;
     background-color: #970000;
     border-radius: 50%;
     transform: translate(-50%, -50%);
-    transition: left 0.1s linear, top 0.1s linear;
 }
 
 .enemy-health-bar {
@@ -84,7 +81,7 @@ body, html {
     left: 50%;
     transform: translateX(-50%);
     width: 100%;
-    height: 5px;
+    height: 10px;
     background-color: #333;
     border-radius: 3px;
 }
@@ -97,29 +94,29 @@ body, html {
 }
 
 #exp-bar {
-    bottom: 10px;
+    bottom: 1.5vw;
     position: absolute;
     width: 95%;
-    height: 20px;
+    height: 3vw;
     background-color: #333;
-    border-radius: 10px;
+    border-radius: 1.5vw;
     overflow: hidden;
     text-align: center;
 }
 
 #hp-bar {
     position: relative;
-    width: 150px;
-    height: 20px;
+    width: 20vw;
+    height: 3vw;
     background-color: #333;
-    border-radius: 10px;
+    border-radius: 1.5vw;
     overflow: hidden;
     text-align: center;
 }
 
 #exp-bar-fill, #hp-bar-fill {
     height: 100%;
-    border-radius: 10px;
+    border-radius: 1.5vw;
 }
 
 #exp-bar-fill {
@@ -140,34 +137,34 @@ body, html {
     transform: translate(-50%, -50%);
     color: white;
     font-weight: bold;
-    font-size: 14px;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+    font-size: 2vw;
+    text-shadow: 0.1vw 0.1vw 0.1vw rgba(0, 0, 0, 0.7);
 }
 
 #timer {
-    font-size: 20px;
+    font-size: 3vw;
     font-weight: bold;
     position: absolute;
-    top: 10px;
-    right: 10px; /* Move to the right */
+    top: 1vw;
+    right: 1vw; /* Move to the right */
 }
 
 #player-stats {
     position: relative;
-    font-size: 14px;
+    font-size: 1.8vw;
     display: inline-flex;
     flex-direction: column;
     align-self: flex-start;
-    margin-top: 10px;
-    margin-left: 10px;
+    margin-top: 1vw;
+    margin-left: 1vw;
 }
 
 #player-stats > div {
-    margin: 2px;
+    margin: 0.1vw;
 }
 
 #level {
-    font-size: 16px;
+    font-size: 2.6vw;
     font-weight: bold;
 }
 
@@ -193,7 +190,7 @@ body, html {
     height: 100%;
     background-color: rgba(0, 0, 0, 0.8);
     color: #fff;
-    font-size: 30px;
+    font-size: 5vw;
     font-weight: bold;
     align-items: center;
     justify-content: center;
@@ -209,7 +206,6 @@ body, html {
     height: 100%;
     background-color: rgba(0, 0, 0, 0.8);
     color: #fff;
-    font-size: 16px;
     align-items: center;
     justify-content: center;
     text-align: center;
@@ -223,11 +219,12 @@ body, html {
 }
 
 .stats-button {
-    padding: 10px 20px;
-    margin: 5px;
+    font-size: 24px;
+    padding: 1vw 3vw;
+    margin: 0.5vw;
     background-color: #3498db;
     border: none;
-    border-radius: 5px;
+    border-radius: 0.5vw;
     cursor: pointer;
     transition: background-color 0.3s;
 }
@@ -237,11 +234,12 @@ body, html {
 }
 
 .ability-button {
-    padding: 10px 20px;
-    margin: 5px;
+    font-size: 24px;
+    padding: 1vw 3vw;
+    margin: 0.5vw;
     background-color: #98d375;
     border: none;
-    border-radius: 5px;
+    border-radius: 0.5vw;
     cursor: pointer;
     transition: background-color 0.3s;
 }
@@ -252,13 +250,13 @@ body, html {
 
 #restart-button {
     display: none;
-    padding: 10px 20px;
+    padding: 2vw 4vw;
     background-color: #3498db;
     color: white;
     border: none;
-    border-radius: 5px;
+    border-radius: 1vw;
     cursor: pointer;
-    font-size: 18px;
+    font-size: 3.6vw;
     transition: background-color 0.3s;
 }
 
@@ -269,8 +267,8 @@ body, html {
 /* CSS for bullet effect */
 .bullet-effect {
     position: absolute;
-    width: 10px;
-    height: 10px;
+    width: 15px;
+    height: 15px;
     background-color: red; /* Color of the bullet */
     border-radius: 50%; /* Makes it circular */
     transform: translate(-50%, -50%); /* Center bullet on the cursor */

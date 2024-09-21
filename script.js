@@ -40,9 +40,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let healthRegenTime = Date.now();
     let healthRegenInterval = 1000 * 1;
     let normalSpawnTime = Date.now();
-    let normalSpawnInterval = 1000 * 60 / 50;
+    let normalSpawnInterval = 1000 * 60 / 75;
     let rareEnemySpawnTime = Date.now();
-    let rareEnemySpawnInterval = 1000 * 60 / 15;
+    let rareEnemySpawnInterval = 1000 * 60 / 20;
     let eliteSpawnTime = Date.now();
     let eliteSpawnIntervalTime = 1000 * 60 / 3;
     let bossSpawnTime = Date.now();
@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
         mana: 50,
         physicalDamage: 10,
         attackSpeed: 2,
-        attackRange: 100, 
+        attackRange: 250, 
         critChance: 5.0,
         critMultiplier: 150,
         armour: 0,
@@ -95,8 +95,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let originalAbilityList = {};
     let abilityList = {
-        "Reflect": {text: "Return ??%(50%) damage to the enemy", progression: ["10", "20", "30", "40", "50"], level: 5, maxLevel: 5},
-        "Bounce": {text: "You deal ??%(0%) less damage, Projectile bounce ??(5) additional time", progression: ["50", "40", "30", "20", "10", "1", "2", "3", "4", "5"], level: 0, maxLevel: 5},
+        "Reflect": {text: "Return ??%(50%) damage to the enemy", progression: ["10", "20", "30", "40", "50"], level: 0, maxLevel: 5},
+        "Bounce": {text: "You deal ??%(10%) less damage, Projectile bounce ??(5) additional time", progression: ["50", "40", "30", "20", "10", "1", "2", "3", "4", "5"], level: 0, maxLevel: 5},
         //"Attack Speed Buff": {text: "Grant additional ??%(50%) attack speed for 5 seconds, cooldown 10 seconds", progression: ["10", "20", "30", "40", "50"], level: 0, maxLevel: 5},
         //"Damage Buff": {text: "Grant additional ??%(50%) damage for 5 seconds, cooldown 10 seconds", progression: ["10", "20", "30", "40", "50"], level: 0, maxLevel: 5},
         "Damage Reduction": {text: "Grant ??%(50%) damage reduction", progression: ["10", "20", "30", "40", "50"], level: 0, maxLevel: 5},
@@ -119,21 +119,30 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     function updatePlayerPosition() {
-        player.style.left = `${window.innerWidth / 2}px`;
-        player.style.top = `${window.innerHeight / 2}px`;
+        player.style.left = `50vw`;
+        player.style.top = `50vh`;
 
         const attackRangeCircle = document.querySelector('.player-attack-range');
         if (attackRangeCircle) {
-            attackRangeCircle.style.width = `${stats.attackRange * 2}px`;
-            attackRangeCircle.style.height = `${stats.attackRange * 2}px`;
-            attackRangeCircle.style.left = `${window.innerWidth / 2 - stats.attackRange}px`;
-            attackRangeCircle.style.top = `${window.innerHeight / 2 - stats.attackRange}px`;
+            const rangeInVW = stats.attackRange * 2;
+            const rangeInVH = stats.attackRange * 2;
+            attackRangeCircle.style.width = `${rangeInVW}px`;
+            attackRangeCircle.style.height = `${rangeInVH}px`;
         }
     }
 
     function createPlayerAttackRange() {
         const attackRangeCircle = document.createElement('div');
         attackRangeCircle.className = 'player-attack-range';
+        
+        const rangeInVW = stats.attackRange * 2;
+        const rangeInVH = stats.attackRange * 2;
+        attackRangeCircle.style.width = `${rangeInVW}px`;
+        attackRangeCircle.style.height = `${rangeInVH}px`;
+
+        attackRangeCircle.style.left = '50%';
+        attackRangeCircle.style.top = '50%';
+        
         document.getElementById('game-container').appendChild(attackRangeCircle);
     }
 
@@ -143,28 +152,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
         switch (edge) {
             case 0:
-                enemyX = Math.random() * window.innerWidth;
-                enemyY = -40;
+                enemyX = Math.random()  * 100;
+                enemyY = -4;
                 break;
             case 1:
-                enemyX = window.innerWidth;
-                enemyY = Math.random() * window.innerHeight;
+                enemyX = 100;
+                enemyY = Math.random()  * 100;
                 break;
             case 2:
-                enemyX = Math.random() * window.innerWidth;
-                enemyY = window.innerHeight;
+                enemyX = Math.random()  * 100;
+                enemyY = 100;
                 break;
             case 3:
-                enemyX = -40;
-                enemyY = Math.random() * window.innerHeight;
+                enemyX = -4;
+                enemyY = Math.random()  * 100;
                 break;
         }
 
         const spawnTime = Date.now();
         const enemy = document.createElement('div');
         enemy.id = `enemy-${nextEnemyId++}`; // Assign a unique ID to the enemy
-        enemy.style.left = `${enemyX}px`;
-        enemy.style.top = `${enemyY}px`;
+        enemy.style.left = `${enemyX}vw`;
+        enemy.style.top = `${enemyY}vh`;
 
         // Create mini health bar for enemy
         const enemyHealthBar = document.createElement('div');
@@ -209,6 +218,7 @@ document.addEventListener('DOMContentLoaded', () => {
         enemyStatsCopy.maxHp = enemyStatsCopy.hp;
 
         enemies.push({
+            id: enemy.id,
             element: enemy,
             stats: enemyStatsCopy,
             spawnTime: spawnTime,
@@ -223,33 +233,34 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function moveEnemy(enemy) {
         // Initialize enemy position
-        let enemyX = parseInt(enemy.element.style.left);
-        let enemyY = parseInt(enemy.element.style.top);
+        let enemyX = parseFloat(enemy.element.style.left);
+        let enemyY = parseFloat(enemy.element.style.top);
 
         // Calculate the player's center
-        const targetX = parseInt(player.style.left);
-        const targetY = parseInt(player.style.top);
+        const targetX = parseFloat(player.style.left);
+        const targetY = parseFloat(player.style.top);
 
         const animate = () => {
-            if (gamePaused || gameOver) return; // Stop animation if game is paused or over
+            if (gamePaused || gameOver) return; 
 
-            // Calculate the angle to move towards the player's center
             const angle = Math.atan2(targetY - enemyY, targetX - enemyX);
 
-            const distanceToPlayer = Math.hypot(targetX - enemyX, targetY - enemyY);
+            const distanceX = Math.abs(enemyX - targetX) * window.innerWidth / 100;
+            const distanceY = Math.abs(enemyY - targetY) * window.innerHeight / 100;
 
-            if (distanceToPlayer > enemy.stats.attackRange / 2) {
-                // Calculate the velocity
-                const velocityX = Math.cos(angle) * enemy.stats.moveSpeed;
-                const velocityY = Math.sin(angle) * enemy.stats.moveSpeed;
+            const distanceToPlayer = Math.hypot(distanceX, distanceY);
+
+            if (distanceToPlayer > enemy.stats.attackRange) {
+                const velocityX = Math.cos(angle) * (enemy.stats.moveSpeed / 10 * window.innerWidth / 100);
+                const velocityY = Math.sin(angle) * (enemy.stats.moveSpeed / 10 * window.innerHeight / 100);
 
                 // Update the enemy's center position
-                enemyX += velocityX;
-                enemyY += velocityY;
+                enemyX += velocityX * 100 / window.innerWidth;
+                enemyY += velocityY * 100 / window.innerHeight;
 
                 // Apply new position to the element
-                enemy.element.style.left = `${enemyX}px`;
-                enemy.element.style.top = `${enemyY}px`;
+                enemy.element.style.left = `${enemyX}vw`;
+                enemy.element.style.top = `${enemyY}vh`;
             }
             
             // Continue the animation
@@ -260,33 +271,42 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function moveBullet(bullet, enemy) {
-        let bulletX = parseInt(bullet.element.style.left);
-        let bulletY = parseInt(bullet.element.style.top);
-        // Position bullet towards the enemy
-        const enemyX = parseInt(enemy.element.style.left);
-        const enemyY = parseInt(enemy.element.style.top);
+        let bulletX = parseFloat(bullet.element.style.left);
+        let bulletY = parseFloat(bullet.element.style.top);
+        
+        const enemyX = parseFloat(enemy.element.style.left);
+        const enemyY = parseFloat(enemy.element.style.top);
         const angle = Math.atan2(enemyY - bulletY, enemyX - bulletX);
+
+        let enemiesClone = Object.assign([], enemies);
+
+        if(bullet.excludeTarget != null){
+            enemiesClone = enemiesClone.filter(x => x.id !== bullet.excludeTarget.id);
+        }
 
         const bulletSpeed = 5;
         const animate = () => {
             if (gamePaused || gameOver) return;
 
-            const velocityX = Math.cos(angle) * bulletSpeed;
-            const velocityY = Math.sin(angle) * bulletSpeed;
+            const velocityX = Math.cos(angle) * (bulletSpeed / 10 * window.innerWidth / 100);
+            const velocityY = Math.sin(angle) * (bulletSpeed / 10 * window.innerHeight / 100);
 
-            bulletX += velocityX;
-            bulletY += velocityY;
+            bulletX += velocityX * 100 / window.innerWidth;
+            bulletY += velocityY * 100 / window.innerHeight;
 
-            bullet.element.style.left = `${bulletX}px`;
-            bullet.element.style.top = `${bulletY}px`;
+            bullet.element.style.left = `${bulletX}vw`;
+            bullet.element.style.top = `${bulletY}vh`;
 
             let hitEnemy = null;
 
-            for (let enemy of enemies){
-                const enemyX = parseInt(enemy.element.style.left);
-                const enemyY = parseInt(enemy.element.style.top);
-                if (Math.abs(bulletX - enemyX) < (enemy.element.offsetWidth / 2) && 
-                    Math.abs(bulletY - enemyY) < (enemy.element.offsetHeight / 2) && 
+            for (let enemy of enemiesClone){
+                const enemyLeft = parseFloat(enemy.element.style.left);
+                const enemyTop = parseFloat(enemy.element.style.top);
+                const enemyWidth = enemy.element.offsetWidth * 100 / window.innerWidth; // Convert to vw
+                const enemyHeight = enemy.element.offsetHeight * 100 / window.innerHeight; // Convert to vh
+
+                if (Math.abs(bulletX - enemyLeft) < (enemyWidth / 2) && 
+                    Math.abs(bulletY - enemyTop) < (enemyHeight / 2) && 
                     enemy.stats.hp > 0) {
                     hitEnemy = enemy;
                     break;
@@ -340,6 +360,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         damage = Math.floor(isReflect ? abilityList["Reflect"].level * 10 / 100 * damage : damage);
+        damage = Math.floor(abilityList["Bounce"].level > 0 ? (50 + 10 * (abilityList["Bounce"].level - 1)) / 100 * damage : damage);
         damage = Math.floor(Math.max(1, damage));
 
         hitEnemy.stats.hp -= damage;
@@ -364,23 +385,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const damageText = document.createElement('div');
         damageText.innerText = damage;
         damageText.style.position = 'absolute';
-        damageText.style.left = `${parseInt(enemy.element.style.left) - enemy.element.offsetWidth / 2}px`;
-        damageText.style.top = `${parseInt(enemy.element.style.top) - 20}px`;
+        damageText.style.left = `${parseFloat(enemy.element.style.left) - enemy.element.offsetWidth / 2 * 100 / window.innerWidth}vw`;
+        damageText.style.top = `${parseFloat(enemy.element.style.top) - enemy.element.offsetHeight / 2 * 100 / window.innerHeight}vh`;
         damageText.style.color = isCriticalHit ? '#ffd700' : '#ff8554';
         damageText.style.textShadow = `
-            0.1px 0.1px 0 rgba(128, 128, 128, 0.1),
-            -0.1px -0.1px 0 rgba(128, 128, 128, 0.1),
-            0.1px -0.1px 0 rgba(128, 128, 128, 0.1),
-            -0.1px 0.1px 0 rgba(128, 128, 128, 0.1)
+            0.1vw 0.1vw 0 rgba(128, 128, 128, 0.1),
+            -0.1vw -0.1vw 0 rgba(128, 128, 128, 0.1),
+            0.1vw -0.1vw 0 rgba(128, 128, 128, 0.1),
+            -0.1vw 0.1vw 0 rgba(128, 128, 128, 0.1)
         `;
-        damageText.style.transform = 'translateY(-10px)';
-        damageText.style.fontSize = '18px';
+        damageText.style.transform = 'translateY(-2vw)';
+        damageText.style.fontSize = '3.6vw';
         damageText.style.transition = 'opacity 2.5s ease-out, transform 2.5s ease-out';
         document.body.appendChild(damageText);
 
         setTimeout(function() {
             damageText.style.opacity = '0';
-            damageText.style.transform = 'translateY(-30px)';
+            damageText.style.transform = 'translateY(-6vw)';
         }, 0);
 
         setTimeout(function() {
@@ -411,7 +432,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!gamePaused && !gameOver) {
             // Player auto-attack
             if (currentTime - lastAttackTime >= 1000 / stats.attackSpeed) {
-                attackNearestEnemy(player.style.left, player.style.top, null, null); // Attack nearest enemy
+                attackNearestEnemy(parseFloat(player.style.left), parseFloat(player.style.top), null, null); // Attack nearest enemy
             }
             
             if (currentTime - timerStart >= 1000) {
@@ -422,8 +443,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 currentDifficultyLevel = Math.floor(elapsedSeconds / (difficultyIntervalTime / 1000));
                 if(previousDifficultyLevel != currentDifficultyLevel){
                     previousDifficultyLevel = currentDifficultyLevel;
-                    normalSpawnInterval = 1000 * 60 / (50 + 2 * currentDifficultyLevel);
-                    rareEnemySpawnInterval = 1000 * 60 / (15 + currentDifficultyLevel);
+                    normalSpawnInterval = 1000 * 60 / (75 + 2 * currentDifficultyLevel);
+                    rareEnemySpawnInterval = 1000 * 60 / (20 + currentDifficultyLevel);
                     eliteSpawnIntervalTime = 1000 * 60 / (3 + currentDifficultyLevel / 4);
                 }
             }
@@ -474,12 +495,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function attackPlayer(enemy) {
-        const playerX = parseInt(player.style.left);
-        const playerY = parseInt(player.style.top);
-        const enemyX = parseInt(enemy.element.style.left);
-        const enemyY = parseInt(enemy.element.style.top);
+        const playerX = parseFloat(player.style.left);
+        const playerY = parseFloat(player.style.top);
+        const enemyX = parseFloat(enemy.element.style.left);
+        const enemyY = parseFloat(enemy.element.style.top);
 
-        const distance = Math.sqrt(Math.pow(playerX - enemyX, 2) + Math.pow(playerY - enemyY, 2));
+        const distanceX = Math.abs(enemyX - playerX) * window.innerWidth / 100;
+        const distanceY = Math.abs(enemyY - playerY) * window.innerHeight / 100;
+
+        const distance = Math.sqrt(Math.pow(distanceX, 2) + Math.pow(distanceY, 2));
         if (distance <= enemy.stats.attackRange) { 
             damageDealToPlayer(enemy);
 
@@ -493,19 +517,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function attackNearestEnemy(fromX, fromY, excludeTarget, remainingBounce) {
         let nearestEnemy = null;
-        let minDistance = stats.attackRange; // Use attack range as the maximum distance
+        const attackRange = stats.attackRange;
+        let minDistance = attackRange;
+
         let enemiesClone = Object.assign([], enemies);
 
         if(excludeTarget != null){
-            enemiesClone = enemiesClone.filter(x => x.enemy !== excludeTarget);
+            enemiesClone = enemiesClone.filter(x => x.id !== excludeTarget.id);
         }
 
-        enemiesClone.forEach((enemy) => {
-            const enemyX = parseInt(enemy.element.style.left);
-            const enemyY = parseInt(enemy.element.style.top);
-            const distance = Math.sqrt(Math.pow(parseInt(fromX) - enemyX, 2) + Math.pow(parseInt(fromY) - enemyY, 2));
+        console.log(excludeTarget);
 
-            if (distance <= stats.attackRange && distance < minDistance) {
+        enemiesClone.forEach((enemy) => {
+            const enemyX = parseFloat(enemy.element.style.left);
+            const enemyY = parseFloat(enemy.element.style.top);
+    
+            let distanceX = Math.abs(fromX - enemyX) * window.innerWidth / 100 ;
+            let distanceY = Math.abs(fromY - enemyY) * window.innerHeight / 100 ;
+
+            const distance = Math.sqrt(Math.pow(distanceX, 2) + Math.pow(distanceY, 2));
+
+            if (distance <= attackRange && distance < minDistance) {
                 minDistance = distance;
                 nearestEnemy = enemy;
             }
@@ -513,20 +545,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (nearestEnemy) {
             if(excludeTarget == null) lastAttackTime = Date.now();
-            fireBullet(fromX, fromY, nearestEnemy, remainingBounce);
+            fireBullet(fromX, fromY, nearestEnemy, excludeTarget, remainingBounce);
         }
     }
 
-    function fireBullet(fromX, fromY, enemy, remainingBounce) {
+    function fireBullet(fromX, fromY, enemy, excludeTarget, remainingBounce) {
         const bullet = document.createElement('div');
         bullet.className = 'bullet-effect'; // Add animation class
-        bullet.style.left = `${parseInt(fromX)}px`;
-        bullet.style.top = `${parseInt(fromY)}px`;
+        bullet.style.left = `${parseFloat(fromX)}vw`;
+        bullet.style.top = `${parseFloat(fromY)}vh`;
         document.getElementById('game-container').appendChild(bullet);
         const bulletData = {
             element: bullet,
             remainingBounce: remainingBounce != null ? remainingBounce : abilityList["Bounce"].level,
             targetEnemy: enemy,
+            excludeTarget: excludeTarget,
             moveAnimationId: null
         };
         
@@ -546,7 +579,7 @@ document.addEventListener('DOMContentLoaded', () => {
             stats.physicalDamage += Math.floor(1 + originalStats.physicalDamage / 5 + statLevel / 2);
         }          
         else if (stat == "Uprade AoE"){
-            stats.attackRange += 10;
+            stats.attackRange += 20;
         }
         else if (stat == "Uprade Attack Speed")
             stats.attackSpeed += 0.1;
