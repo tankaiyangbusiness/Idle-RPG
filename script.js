@@ -65,7 +65,6 @@ document.addEventListener('DOMContentLoaded', () => {
         level: 1,
         exp: 0,
         expThreshold: 8,
-        abilityList: {},
     };
 
     let originalEnemyStats = {};
@@ -526,8 +525,6 @@ document.addEventListener('DOMContentLoaded', () => {
             enemiesClone = enemiesClone.filter(x => x.id !== excludeTarget.id);
         }
 
-        console.log(excludeTarget);
-
         enemiesClone.forEach((enemy) => {
             const enemyX = parseFloat(enemy.element.style.left);
             const enemyY = parseFloat(enemy.element.style.top);
@@ -659,8 +656,8 @@ document.addEventListener('DOMContentLoaded', () => {
         pauseOverlay.style.display = 'none';
     }
 
-    function getAbilities(abilityList) {
-        const abilitiesClone = Object.assign([], abilityList);
+    function getAbilities(list) {
+        const abilitiesClone = JSON.parse(JSON.stringify(list));
 
         const abilitiesArray = Object.keys(abilitiesClone).filter(key => 
             abilitiesClone[key].level < abilitiesClone[key].maxLevel
@@ -669,12 +666,12 @@ document.addEventListener('DOMContentLoaded', () => {
         return abilitiesArray;
     }
 
-    function getRandomStats(statsList, num) {
-        const availableStats = Object.keys(statsList).filter(key => 
-            statsList[key].level < statsList[key].maxLevel
+    function getRandomStats(list, num) {
+        const availableStats = Object.keys(list).filter(key => 
+            list[key].level < list[key].maxLevel
         );
         
-        const statsClone = Object.assign([], availableStats);
+        const statsClone = JSON.parse(JSON.stringify(availableStats));
         const shuffledStats = statsClone.sort(() => 0.5 - Math.random());
         const selectedStats = shuffledStats.slice(0, num);
     
@@ -719,10 +716,10 @@ document.addEventListener('DOMContentLoaded', () => {
     function initVariable(){
         enemies.length = 0;
         bullets.length = 0;
-        originalStats = Object.assign([], stats);
-        originalEnemyStats = Object.assign([], enemyStats);
-        originalStatsList = Object.assign([], statsList);
-        originalAbilityList = Object.assign([], abilityList);
+        originalStats = JSON.parse(JSON.stringify(stats));
+        originalEnemyStats = JSON.parse(JSON.stringify(enemyStats));
+        originalStatsList = JSON.parse(JSON.stringify(statsList));
+        originalAbilityList = JSON.parse(JSON.stringify(abilityList));
 
         for(var i = 0; i < 20; i++){
             abilityLevelThreshold.push(9 + 10 * i);
@@ -733,10 +730,10 @@ document.addEventListener('DOMContentLoaded', () => {
         cancelAnimationFrame(gameLoopId);
         gamePaused = false;
         gameOver = false;
-        stats = Object.assign([], originalStats);
-        enemyStats = Object.assign([], originalEnemyStats);
-        statsList = Object.assign([], originalStatsList);
-        abilityList = Object.assign([], originalAbilityList);
+        stats = JSON.parse(JSON.stringify(originalStats));
+        enemyStats = JSON.parse(JSON.stringify(originalEnemyStats));
+        statsList = JSON.parse(JSON.stringify(originalStatsList));
+        abilityList = JSON.parse(JSON.stringify(originalAbilityList));
         enemies.forEach(enemy => {
             enemy.element.remove();
         });
@@ -843,6 +840,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const selectedButton = buttons[buttonIndex]; 
                 selectedButton.click();
             }
+        }
+    });
+
+    document.addEventListener('click', (event) => {
+        if (gameOver && !gamePaused) { // Restart game on any key press when game is over
+            restartGame();
         }
     });
       
