@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let healthRegenTime = Date.now();
     let healthRegenInterval = 1000 * 1;
     let normalSpawnTime = Date.now();
-    let normalSpawnInterval = 1000 * 60 / 75;
+    let normalSpawnInterval = 1000 * 60 / 100;
     let rareEnemySpawnTime = Date.now();
     let rareEnemySpawnInterval = 1000 * 60 / 20;
     let eliteSpawnTime = Date.now();
@@ -187,7 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('game-container').appendChild(enemy);
 
         const enemyStatsCopy = Object.assign([], enemyStats);
-        enemyStatsCopy.hp = enemyStats.hp + enemyStats.hp * (currentDifficultyLevel) / 3 + enemyStats.hp * Math.pow(currentDifficultyLevel, 1.2) / 5;
+        enemyStatsCopy.hp = enemyStats.hp + enemyStats.hp * (currentDifficultyLevel) / 2 + enemyStats.hp * Math.pow(currentDifficultyLevel, 1.2) / 5;
         enemyStatsCopy.physicalDamage = enemyStats.physicalDamage + enemyStats.physicalDamage * (currentDifficultyLevel) / 3 + enemyStats.physicalDamage * Math.pow(currentDifficultyLevel, 1.1) / 10;
         enemyStatsCopy.exp = enemyStats.exp + enemyStats.exp * (currentDifficultyLevel) / 5 + enemyStats.exp * Math.pow(currentDifficultyLevel, 1.5) / 5;
         if(rarity == "boss"){
@@ -443,9 +443,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 currentDifficultyLevel = Math.floor(elapsedSeconds / (difficultyIntervalTime / 1000));
                 if(previousDifficultyLevel != currentDifficultyLevel){
                     previousDifficultyLevel = currentDifficultyLevel;
-                    normalSpawnInterval = 1000 * 60 / (75 + 2 * currentDifficultyLevel);
+                    normalSpawnInterval = 1000 * 60 / (100 + 3 * currentDifficultyLevel);
                     rareEnemySpawnInterval = 1000 * 60 / (20 + currentDifficultyLevel);
-                    eliteSpawnIntervalTime = 1000 * 60 / (3 + currentDifficultyLevel / 4);
+                    eliteSpawnIntervalTime = 1000 * 60 / (3 + currentDifficultyLevel / 3);
                 }
             }
 
@@ -725,7 +725,7 @@ document.addEventListener('DOMContentLoaded', () => {
         originalAbilityList = Object.assign([], abilityList);
 
         for(var i = 0; i < 20; i++){
-            abilityLevelThreshold.push(4 + 5 * i);
+            abilityLevelThreshold.push(9 + 10 * i);
         }
     }
 
