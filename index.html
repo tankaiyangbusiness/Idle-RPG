@@ -7,15 +7,20 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <div id="character-selection">
+        <h2>Select Your Character</h2>
+        <div id="character-list">
+            <button class="character-button" data-character="Scion">1. Scion</button>
+        </div>
+    </div>
     <div id="game-container">
         <div id="game-area">
             <div id="player">
                 <div id="attack-range"></div>
             </div>
-            <!-- Enemies will be added here dynamically -->
         </div>
     </div>
-    <div id="game-ui">
+    <div id="game-ui" style="display: none;">
         <div id="timer">Time: 0:00</div>
         <div id="player-stats">
             <div id="level">Level: 1</div>
@@ -28,6 +33,7 @@
             <div id="attack-speed">Attack Speed: 1</div>
             <div id="hp-regen">HP Regen: 1</div>
             <div id="armour">Armour: 1</div>
+            <div id="evade">Evade: 1.0%</div>
             <div id="crit-chance">Crit: 5.0%</div>
             <div id="crit-multiplier">Crit Multi: 150%</div>
         </div>

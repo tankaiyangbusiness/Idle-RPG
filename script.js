@@ -13,11 +13,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const attackSpeedDisplay = document.getElementById('attack-speed');
     const hpRegenDisplay = document.getElementById('hp-regen');
     const armourDisplay = document.getElementById('armour');
+    const evadeDisplay = document.getElementById('evade');
     const critChanceDisplay = document.getElementById('crit-chance');
     const critMultiplierDisplay = document.getElementById('crit-multiplier');
     const pauseOverlay = document.getElementById('pause-overlay');
     const gameOverOverlay = document.getElementById('game-over-overlay');
     const gameContainer = document.getElementById('game-container');
+    const charaterSelectionDisplay = document.getElementById('character-selection');
+    const charaterListDisplay = document.getElementById('character-list');
+    const gameUIDisplay = document.getElementById('game-ui');
 
     window.requestAnimationFrame =
            window.requestAnimationFrame ||
@@ -25,6 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
            window.webkitRequestAnimationFrame ||
            window.msRequestAnimationFrame;
 
+    let characterSelection = false;
     let gamePaused = false;
     let gameOver = false;
     let gameLoopId;
@@ -40,44 +45,158 @@ document.addEventListener('DOMContentLoaded', () => {
     let healthRegenTime = Date.now();
     let healthRegenInterval = 1000 * 1;
     let normalSpawnTime = Date.now();
-    let normalSpawnInterval = 1000 * 60 / 100;
+    let normalSpawnInterval = 1000 * 60 / 50;
     let rareEnemySpawnTime = Date.now();
-    let rareEnemySpawnInterval = 1000 * 60 / 20;
+    let rareEnemySpawnInterval = 1000 * 60 / 15;
     let eliteSpawnTime = Date.now();
     let eliteSpawnIntervalTime = 1000 * 60 / 3;
     let bossSpawnTime = Date.now();
     let bossSpawnIntervalTime = 1000 * 60 / 1;
     let nextEnemyId = 0;
 
+    //buffs
+    let attackSpeedBuffTime = Date.now();
+    let attackSpeedBuffInterval = 1000 * 10;
+    let attackSpeedBuffDuration = 1000 * 5;
+
+    const characters = [
+        {
+            name: "Adventurer",
+            stats: {
+                hp: 600,
+                maxHp: 600,
+                physicalDamage: 30,
+                attackSpeed: 2,
+                attackRange: 150, 
+                critChance: 5.0,
+                critMultiplier: 150,
+                armour: 30,
+                evade: 15,
+                hpRegen: 3,
+                level: 1,
+                exp: 0,
+                expGain: 1.5,
+                expThreshold: 8,
+                buffList: {},
+            },
+            description: "A strong beginner friendly."
+        },
+        {
+            name: "Warrior",
+            stats: {
+                hp: 1000,
+                maxHp: 1000,
+                physicalDamage: 30,
+                attackSpeed: 1.30,
+                attackRange: 80, 
+                critChance: 5.0,
+                critMultiplier: 200,
+                armour: 45,
+                evade: 0,
+                hpRegen: 10,
+                level: 1,
+                exp: 0,
+                expGain: 1,
+                expThreshold: 8,
+                buffList: {},
+            },
+            description: "A strong melee fighter."
+        },
+        {
+            name: "Ranger",
+            stats: {
+                hp: 350,
+                maxHp: 350,
+                physicalDamage: 40,
+                attackSpeed: 2.5,
+                attackRange: 300, 
+                critChance: 15.0,
+                critMultiplier: 125,
+                armour: 10,
+                evade: 25,
+                hpRegen: 1,
+                level: 1,
+                exp: 0,
+                expGain: 1,
+                expThreshold: 8,
+                buffList: {},
+            },
+            description: "A strong ranger."
+        },
+        {
+            name: "Assassin",
+            stats: {
+                hp: 300,
+                maxHp: 300,
+                physicalDamage: 45,
+                attackSpeed: 2.1,
+                attackRange: 100, 
+                critChance: 25.0,
+                critMultiplier: 250,
+                armour: 5,
+                evade: 50,
+                hpRegen: 1,
+                level: 1,
+                exp: 0,
+                expGain: 1,
+                expThreshold: 8,
+                buffList: {},
+            },
+            description: "A strong assassin."
+        },
+        {
+            name: "Healer",
+            stats: {
+                hp: 800,
+                maxHp: 800,
+                physicalDamage: 25,
+                attackSpeed: 1.85,
+                attackRange: 200, 
+                critChance: 5.0,
+                critMultiplier: 150,
+                armour: 25,
+                evade: 10,
+                hpRegen: 150,
+                level: 1,
+                exp: 0,
+                expGain: 1,
+                expThreshold: 8,
+                buffList: {},
+            },
+            description: "A strong healer."
+        },
+    ];
+
     let originalStats = {};
     let stats = {
-        hp: 500,
-        maxHp: 500,
-        mana: 50,
+        hp: 600,
+        maxHp: 600,
         physicalDamage: 10,
         attackSpeed: 2,
-        attackRange: 250, 
+        attackRange: 150, 
         critChance: 5.0,
         critMultiplier: 150,
-        armour: 0,
-        hpRegen: 1,
-        manaRegen: 1,
+        armour: 1,
+        evade: 0,
+        hpRegen: 3,
         level: 1,
         exp: 0,
+        expGain: 1,
         expThreshold: 8,
+        buffList: {},
     };
 
     let originalEnemyStats = {};
     let enemyStats = {
-        hp: 10,
-        maxHp: 10,
-        physicalDamage: 2,
-        attackSpeed: 1.25,
+        hp: 15,
+        maxHp: 15,
+        physicalDamage: 10,
+        attackSpeed: 1.4,
         attackRange: 50, 
         armour: 0,
         hpRegen: 0.5,
-        moveSpeed: 1,
-        exp: 2
+        moveSpeed: 0.3,
+        exp: 3
     };
 
     let originalStatsList = {};
@@ -85,7 +204,7 @@ document.addEventListener('DOMContentLoaded', () => {
         "Uprade Damage": {level: 0, maxLevel: 1000},
         "Uprade AoE": {level: 0, maxLevel: 25},
         "Uprade Attack Speed": {level: 0, maxLevel: 50},
-        "Uprade HP": {level: 0, maxLevel: 1000},
+        "Uprade HP (Recover 20% Life)": {level: 0, maxLevel: 1000},
         "Uprade HP Regen": {level: 0, maxLevel: 1000},
         "Uprade Armour": {level: 0, maxLevel: 1000},
         "Uprade Crit Chance": {level: 0, maxLevel: 40},
@@ -94,12 +213,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let originalAbilityList = {};
     let abilityList = {
-        "Reflect": {text: "Return ??%(50%) damage to the enemy", progression: ["10", "20", "30", "40", "50"], level: 0, maxLevel: 5},
-        "Bounce": {text: "You deal ??%(10%) less damage, Projectile bounce ??(5) additional time", progression: ["50", "40", "30", "20", "10", "1", "2", "3", "4", "5"], level: 0, maxLevel: 5},
-        //"Attack Speed Buff": {text: "Grant additional ??%(50%) attack speed for 5 seconds, cooldown 10 seconds", progression: ["10", "20", "30", "40", "50"], level: 0, maxLevel: 5},
-        //"Damage Buff": {text: "Grant additional ??%(50%) damage for 5 seconds, cooldown 10 seconds", progression: ["10", "20", "30", "40", "50"], level: 0, maxLevel: 5},
-        "Damage Reduction": {text: "Grant ??%(50%) damage reduction", progression: ["10", "20", "30", "40", "50"], level: 0, maxLevel: 5},
-        "Lifesteal": {text: "Grant ??%(50%) lifesteal", progression: ["10", "20", "30", "40", "50"], level: 0, maxLevel: 5},
+        "Reflect": {text: "Return ??%(25%) damage to the enemy", progression: ["5", "10", "15", "20", "25"], level: 0, maxLevel: 5},
+        "Bounce": {text: "You deal ??%(0%) less damage, Projectile bounce ??(5) additional time", progression: ["40", "30", "20", "10", "0", "1", "2", "3", "4", "5"], level: 0, maxLevel: 5},
+        "Attack Speed Buff": {text: "Grant additional ??%(80%) attack speed for 5 seconds, cooldown 10 seconds", progression: ["16", "32", "48", "64", "80"], level: 0, maxLevel: 5},
+        //"Damage Buff": {text: "Grant additional ??%(80%) damage for 5 seconds, cooldown 10 seconds", progression: ["16", "32", "48", "64", "80"], level: 0, maxLevel: 5},
+        "Damage Reduction": {text: "Grant ??%(60%) damage reduction", progression: ["12", "24", "36", "48", "60"], level: 0, maxLevel: 5},
+        "Lifesteal": {text: "Grant ??%(75%) lifesteal", progression: ["15", "30", "45", "60", "75"], level: 0, maxLevel: 5},
+        "HP To Damage": {text: "Deal additional ??%(30%) of maximum life as damage", progression: ["6", "12", "18", "24", "30"], level: 0, maxLevel: 5},
+        "Regen To Damage": {text: "Deal additional ??%(250%) of Regen as damage, More ??%(100%) Regen Speed", progression: ["50", "100", "150", "200", "250", "20", "40", "60", "80", "100"], level: 0, maxLevel: 5},
         //"Immune Damage": {text: "Immune to damage for ??(5) seconds, cooldown ??(10) seconds", progression: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"], level: 0, maxLevel: 5},
     };
 
@@ -108,14 +229,46 @@ document.addEventListener('DOMContentLoaded', () => {
     const enemies = [];
     const bullets = [];
 
-    init();
+    showCharacterSelection();
 
-    function init(){
+    function startGame(){
+        characterSelection = false;
+        charaterSelectionDisplay.style.display = 'none';
+        gameUIDisplay.style.display = 'flex';
+        gameContainer.style.display = 'flex';
+
         initVariable();
         createPlayerAttackRange();
         updatePlayerPosition();
+        updateStatsDisplay();
         gameLoop();
     };
+
+    function showCharacterSelection(){
+        characterSelection = true;
+
+        charaterSelectionDisplay.style.display = 'flex';
+        gameOverOverlay.style.display = 'none';
+        gameUIDisplay.style.display = 'none';
+        gameContainer.style.display = 'none';
+
+        let characterText = "";
+        let n = 1;
+        characters.forEach(element => {
+            let i = 0;
+            characterText += "<button class=\"character-button\" onclick=\"selectCharacter('" + element.name + "')\">" + n + ". " +  element.name + "</button>"
+            n++;
+        });
+        charaterListDisplay.innerHTML = characterText;
+    }
+
+    window.selectCharacter = function(character) {
+        let selectedCharacter = characters.find(o => o.name === character);
+        let selectedCharacterStats = selectedCharacter.stats;
+        originalStats = JSON.parse(JSON.stringify(selectedCharacterStats));
+        stats = JSON.parse(JSON.stringify(originalStats));
+        startGame();
+    }
 
     function updatePlayerPosition() {
         player.style.left = `50vw`;
@@ -152,25 +305,28 @@ document.addEventListener('DOMContentLoaded', () => {
         switch (edge) {
             case 0:
                 enemyX = Math.random()  * 100;
-                enemyY = -4;
+                enemyY = -2;
                 break;
             case 1:
-                enemyX = 100;
+                enemyX = 102;
                 enemyY = Math.random()  * 100;
                 break;
             case 2:
                 enemyX = Math.random()  * 100;
-                enemyY = 100;
+                enemyY = 102;
                 break;
             case 3:
-                enemyX = -4;
+                enemyX = -2;
                 enemyY = Math.random()  * 100;
                 break;
         }
 
+        enemyX = enemyX * 1920 / window.innerWidth;
+        enemyY = enemyY * 1080 / window.innerHeight;
+
         const spawnTime = Date.now();
         const enemy = document.createElement('div');
-        enemy.id = `enemy-${nextEnemyId++}`; // Assign a unique ID to the enemy
+        enemy.id = `enemy-${nextEnemyId++}`;
         enemy.style.left = `${enemyX}vw`;
         enemy.style.top = `${enemyY}vh`;
 
@@ -186,29 +342,37 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('game-container').appendChild(enemy);
 
         const enemyStatsCopy = Object.assign([], enemyStats);
-        enemyStatsCopy.hp = enemyStats.hp + enemyStats.hp * (currentDifficultyLevel) / 2 + enemyStats.hp * Math.pow(currentDifficultyLevel, 1.2) / 5;
-        enemyStatsCopy.physicalDamage = enemyStats.physicalDamage + enemyStats.physicalDamage * (currentDifficultyLevel) / 3 + enemyStats.physicalDamage * Math.pow(currentDifficultyLevel, 1.1) / 10;
-        enemyStatsCopy.exp = enemyStats.exp + enemyStats.exp * (currentDifficultyLevel) / 5 + enemyStats.exp * Math.pow(currentDifficultyLevel, 1.5) / 5;
+        enemyStatsCopy.hp = enemyStats.hp + enemyStats.hp * currentDifficultyLevel / 3 + enemyStats.hp * Math.pow(currentDifficultyLevel, 1.7) / 5;
+        enemyStatsCopy.physicalDamage = enemyStats.physicalDamage + enemyStats.physicalDamage * (currentDifficultyLevel) / 12 + enemyStats.physicalDamage * Math.pow(currentDifficultyLevel, 1.4) / 25;
+        enemyStatsCopy.exp = enemyStats.exp + enemyStats.exp * (currentDifficultyLevel) / 5 + enemyStats.exp * Math.pow(currentDifficultyLevel, 1.2) / 5;
         if(rarity == "boss"){
             enemy.className = 'boss';
             enemyStatsCopy.hp = enemyStatsCopy.hp * 10;
+            enemyStatsCopy.hp += enemyStatsCopy.hp * currentDifficultyLevel / 20;
             enemyStatsCopy.physicalDamage = enemyStatsCopy.physicalDamage * 1.5 * (Math.log(currentDifficultyLevel + 3));
-            enemyStatsCopy.exp = enemyStatsCopy.exp * 10;
+            enemyStatsCopy.physicalDamage += enemyStatsCopy.physicalDamage * currentDifficultyLevel / 96;
+            enemyStatsCopy.exp = enemyStatsCopy.exp * 12;
         }
         else if(rarity == "elite"){
             enemy.className = 'elite';
-            enemyStatsCopy.hp = enemyStatsCopy.hp * 4;
-            enemyStatsCopy.physicalDamage = enemyStatsCopy.physicalDamage * 1.2 * (Math.log(currentDifficultyLevel + 3));
-            enemyStatsCopy.exp = enemyStatsCopy.exp * 4;
+            enemyStatsCopy.hp = enemyStatsCopy.hp * 5;
+            enemyStatsCopy.hp += enemyStatsCopy.hp * currentDifficultyLevel / 24;
+            enemyStatsCopy.physicalDamage = enemyStatsCopy.physicalDamage * 1.35 * (Math.log(currentDifficultyLevel + 3));
+            enemyStatsCopy.physicalDamage += enemyStatsCopy.physicalDamage * currentDifficultyLevel / 80;
+            enemyStatsCopy.exp = enemyStatsCopy.exp * 5;
         }
         else if(rarity == "rareEnemy"){
             enemy.className = 'rare-enemy';
             enemyStatsCopy.hp = enemyStatsCopy.hp * 2;
-            enemyStatsCopy.physicalDamage = enemyStatsCopy.physicalDamage * 1.1 * (Math.log(currentDifficultyLevel + 3));
-            enemyStatsCopy.exp = enemyStatsCopy.exp * 2;
+            enemyStatsCopy.hp += enemyStatsCopy.hp * currentDifficultyLevel / 28;
+            enemyStatsCopy.physicalDamage = enemyStatsCopy.physicalDamage * 1.2 * (Math.log(currentDifficultyLevel + 3));
+            enemyStatsCopy.physicalDamage += enemyStatsCopy.physicalDamage * currentDifficultyLevel / 64;
+            enemyStatsCopy.exp = enemyStatsCopy.exp * 2.5;
         }
         else {
             enemy.className = 'enemy';
+            enemyStatsCopy.hp += enemyStatsCopy.hp * currentDifficultyLevel / 32;
+            enemyStatsCopy.physicalDamage += enemyStatsCopy.physicalDamage * currentDifficultyLevel / 48;
         }
 
         enemyStatsCopy.hp = Math.floor(enemyStatsCopy.hp);
@@ -221,21 +385,18 @@ document.addEventListener('DOMContentLoaded', () => {
             element: enemy,
             stats: enemyStatsCopy,
             spawnTime: spawnTime,
-            moveAnimationId: null // Store animation ID
+            moveAnimationId: null
         });
 
-        enemyAttackCooldown[enemy.id] = 0; // Initialize attack cooldown for the enemy
+        enemyAttackCooldown[enemy.id] = 0;
 
-        // Start moving the enemy
         moveEnemy(enemies[enemies.length - 1]);
     }
 
     function moveEnemy(enemy) {
-        // Initialize enemy position
         let enemyX = parseFloat(enemy.element.style.left);
         let enemyY = parseFloat(enemy.element.style.top);
 
-        // Calculate the player's center
         const targetX = parseFloat(player.style.left);
         const targetY = parseFloat(player.style.top);
 
@@ -250,12 +411,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const distanceToPlayer = Math.hypot(distanceX, distanceY);
 
             if (distanceToPlayer > enemy.stats.attackRange) {
-                const velocityX = Math.cos(angle) * (enemy.stats.moveSpeed / 10 * window.innerWidth / 100);
-                const velocityY = Math.sin(angle) * (enemy.stats.moveSpeed / 10 * window.innerHeight / 100);
+                const velocityX = Math.cos(angle) * enemy.stats.moveSpeed;
+                const velocityY = Math.sin(angle) * enemy.stats.moveSpeed;
 
                 // Update the enemy's center position
-                enemyX += velocityX * 100 / window.innerWidth;
-                enemyY += velocityY * 100 / window.innerHeight;
+                enemyX += velocityX;
+                enemyY += velocityY;
 
                 // Apply new position to the element
                 enemy.element.style.left = `${enemyX}vw`;
@@ -283,15 +444,15 @@ document.addEventListener('DOMContentLoaded', () => {
             enemiesClone = enemiesClone.filter(x => x.id !== bullet.excludeTarget.id);
         }
 
-        const bulletSpeed = 5;
+        const bulletSpeed = 1;
         const animate = () => {
             if (gamePaused || gameOver) return;
 
-            const velocityX = Math.cos(angle) * (bulletSpeed / 10 * window.innerWidth / 100);
-            const velocityY = Math.sin(angle) * (bulletSpeed / 10 * window.innerHeight / 100);
+            const velocityX = Math.cos(angle) * bulletSpeed;
+            const velocityY = Math.sin(angle) * bulletSpeed;
 
-            bulletX += velocityX * 100 / window.innerWidth;
-            bulletY += velocityY * 100 / window.innerHeight;
+            bulletX += velocityX;
+            bulletY += velocityY;
 
             bullet.element.style.left = `${bulletX}vw`;
             bullet.element.style.top = `${bulletY}vh`;
@@ -314,7 +475,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
             // Remove bullet if it reaches the enemy
             if (hitEnemy) {
-                damageDealToEnemy(hitEnemy, false);
+                damageDealToEnemy(hitEnemy, false, bullet.remainingBounce > 0 ? true : false);
 
                 if(bullet.remainingBounce > 0){
                     bullet.remainingBounce--;
@@ -332,34 +493,40 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function damageDealToPlayer(enemy){
-        let damage = 0;
-        damage = enemy.stats.physicalDamage - stats.armour;
+        let isEvadeHit = Math.random() < stats.evade / 100;
 
-        damageReductionLevel = abilityList["Damage Reduction"].level;
-        damage = Math.floor(damageReductionLevel > 0 ? damage * damageReductionLevel * 10 / 100 : damage);
-
-        if(stats.armour >= enemy.stats.physicalDamage * 3){
-            damage = Math.max(0, damage);
+        if(!isEvadeHit){
+            let damage = 0;
+            damage = enemy.stats.physicalDamage - stats.armour;
+    
+            damageReductionLevel = abilityList["Damage Reduction"].level;
+            damage = Math.floor(damageReductionLevel > 0 ? damage * damageReductionLevel * 12 / 100 : damage);
+    
+            if(stats.armour >= enemy.stats.physicalDamage * 3){
+                damage = Math.max(0, damage);
+            }
+            else
+            {
+                damage = Math.max(1, damage);
+            }
+    
+            stats.hp -= damage;
         }
-        else
-        {
-            damage = Math.max(1, damage);
-        }
-
-        stats.hp -= damage;
     }
 
-    function damageDealToEnemy(hitEnemy, isReflect){
-        let isCriticalHit = Math.random() < stats.critChance / 100; // critChance should be between 0 and 1
-
+    function damageDealToEnemy(hitEnemy, isReflect, isBounce){
         let damage = stats.physicalDamage - hitEnemy.stats.armour;
 
+        damage = Math.floor(abilityList["HP To Damage"].level > 0 ? ( stats.maxHp * abilityList["HP To Damage"].level * 6 / 100 + damage) : damage);
+        damage = Math.floor(abilityList["Regen To Damage"].level > 0 ? ( stats.hpRegen * abilityList["Regen To Damage"].level * 50 / 100 + damage) : damage);
+        damage = Math.floor(isReflect ? abilityList["Reflect"].level * 5 / 100 * damage : damage);
+        damage = Math.floor(abilityList["Bounce"].level > 0 ? (60 + 10 * (abilityList["Bounce"].level - 1)) / 100 * damage : damage);
+
+        let isCriticalHit = Math.random() < stats.critChance / 100; // critChance should be between 0 and 1
         if (isCriticalHit) {
             damage *= stats.critMultiplier / 100; 
         }
 
-        damage = Math.floor(isReflect ? abilityList["Reflect"].level * 10 / 100 * damage : damage);
-        damage = Math.floor(abilityList["Bounce"].level > 0 ? (50 + 10 * (abilityList["Bounce"].level - 1)) / 100 * damage : damage);
         damage = Math.floor(Math.max(1, damage));
 
         hitEnemy.stats.hp -= damage;
@@ -371,10 +538,10 @@ document.addEventListener('DOMContentLoaded', () => {
             removeEnemy(hitEnemy);
         }
 
-        if(!isReflect){
+        if(!isReflect && !isBounce){
             lifestealLevel = abilityList["Lifesteal"].level;
             if(lifestealLevel > 0){
-                stats.hp += Math.floor(damage * lifestealLevel * 10 / 100);
+                stats.hp += Math.floor(damage * lifestealLevel * 5 / 100);
                 updateStatsDisplay();
             }
         }
@@ -421,6 +588,7 @@ document.addEventListener('DOMContentLoaded', () => {
         attackSpeedDisplay.textContent = `Attack Speed: ${stats.attackSpeed.toFixed(2).replace(/[.,]00$/, "")}`;
         hpRegenDisplay.textContent = `HP Regen: ${stats.hpRegen}`;
         armourDisplay.textContent = `Armour: ${stats.armour}`;
+        evadeDisplay.textContent = `Evade: ${stats.evade.toFixed(2).replace(/[.,]00$/, "")}%`;
         critChanceDisplay.textContent = `Crit: ${stats.critChance.toFixed(2).replace(/[.,]00$/, "")}%`;
         critMultiplierDisplay.textContent = `Crit Multi: ${stats.critMultiplier}%`;
     }
@@ -433,6 +601,16 @@ document.addEventListener('DOMContentLoaded', () => {
             if (currentTime - lastAttackTime >= 1000 / stats.attackSpeed) {
                 attackNearestEnemy(parseFloat(player.style.left), parseFloat(player.style.top), null, null); // Attack nearest enemy
             }
+
+            if (abilityList["Attack Speed Buff"].level > 0) {
+                if(currentTime - attackSpeedBuffTime >= attackSpeedBuffInterval) {
+                    attackSpeedBuffTime = currentTime;
+                    GrantBuff("Attack Speed Buff");
+                }
+                else if (currentTime - attackSpeedBuffTime >= attackSpeedBuffDuration){
+                    RemoveBuff("Attack Speed Buff");
+                }
+            }
             
             if (currentTime - timerStart >= 1000) {
                 elapsedSeconds = Math.floor((currentTime - timerStart) / 1000);
@@ -442,9 +620,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 currentDifficultyLevel = Math.floor(elapsedSeconds / (difficultyIntervalTime / 1000));
                 if(previousDifficultyLevel != currentDifficultyLevel){
                     previousDifficultyLevel = currentDifficultyLevel;
-                    normalSpawnInterval = 1000 * 60 / (100 + 3 * currentDifficultyLevel);
-                    rareEnemySpawnInterval = 1000 * 60 / (20 + currentDifficultyLevel);
-                    eliteSpawnIntervalTime = 1000 * 60 / (3 + currentDifficultyLevel / 3);
+                    normalSpawnInterval = 1000 * 60 / (50 + 4 * currentDifficultyLevel);
+                    rareEnemySpawnInterval = 1000 * 60 / (15 + 2 * currentDifficultyLevel);
+                    eliteSpawnIntervalTime = 1000 * 60 / (3 + currentDifficultyLevel / 1.5);
+                    bossSpawnIntervalTime = 1000 * 60 / (1 + currentDifficultyLevel / 25);
                 }
             }
 
@@ -481,8 +660,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
-            // Regen logic
-            if (currentTime - healthRegenTime >= healthRegenInterval) {
+            if (currentTime - healthRegenTime >= (healthRegenInterval / (1 + (abilityList["Regen To Damage"].level > 0 ? abilityList["Regen To Damage"].level * 20 / 100 : 0)))) {
                 healthRegenTime = currentTime;
                 stats.hp += stats.hpRegen;
             }
@@ -491,6 +669,31 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         gameLoopId = requestAnimationFrame(gameLoop);
+    }
+
+    function GrantBuff(buff){
+        if(stats.buffList.length > 0 && stats.buffList[buff]){
+            RemoveBuff(buff);
+            GrantBuff(buff);
+        }
+        else{
+            if(buff == "Attack Speed Buff"){
+                let attackSpeedBuff = abilityList[buff].level > 0 ? stats.attackSpeed * abilityList[buff].level * 16 / 100 : 0;
+                stats.buffList[buff] = attackSpeedBuff;
+                stats.attackSpeed += stats.buffList[buff];
+                updateStatsDisplay();
+            }
+        }
+    }
+
+    function RemoveBuff(buff){
+        if(stats.buffList[buff]){
+            if(buff == "Attack Speed Buff"){
+                stats.attackSpeed -= stats.buffList[buff];
+                updateStatsDisplay();
+            }
+            delete stats.buffList[buff];
+        }
     }
 
     function attackPlayer(enemy) {
@@ -507,7 +710,7 @@ document.addEventListener('DOMContentLoaded', () => {
             damageDealToPlayer(enemy);
 
             if(abilityList["Reflect"].level > 0){
-                damageDealToEnemy(enemy, true);
+                damageDealToEnemy(enemy, true, false);
             }
 
             updateStatsDisplay();
@@ -573,22 +776,23 @@ document.addEventListener('DOMContentLoaded', () => {
     window.selectStat = function(stat) {
         statLevel = statsList[stat].level + 1;
         if(stat == "Uprade Damage"){
-            stats.physicalDamage += Math.floor(1 + originalStats.physicalDamage / 5 + statLevel / 2);
+            stats.physicalDamage += Math.floor(1 + originalStats.physicalDamage / 3 + statLevel / 2);
         }          
         else if (stat == "Uprade AoE"){
-            stats.attackRange += 20;
+            stats.attackRange += 15;
         }
         else if (stat == "Uprade Attack Speed")
-            stats.attackSpeed += 0.1;
-        else if (stat == "Uprade HP"){
-            stats.hp += Math.floor(originalStats.hp / 25 * (statLevel) / 5 + originalStats.hp / 25 * Math.pow(statLevel, 1.1) / 10);
-            stats.maxHp += Math.floor(originalStats.hp / 25 * (statLevel) / 5 + originalStats.hp / 25 * Math.pow(statLevel, 1.1) / 10);
+            stats.attackSpeed += 0.05 + originalStats.attackSpeed / 30;
+        else if (stat == "Uprade HP (Recover 20% Life)"){
+            stats.hp += Math.floor(5 + originalStats.hp / 100 * (statLevel) + statLevel * (Math.log(statLevel * 1.5 + 1)));
+            stats.maxHp += Math.floor(5 + originalStats.hp / 100 * (statLevel) + statLevel * (Math.log(statLevel * 1.5 + 1)));
+            stats.hp += Math.floor(stats.maxHp * 20 / 100);
         }
         else if (stat == "Uprade HP Regen"){
-            stats.hpRegen += 4 + statLevel;
+            stats.hpRegen += Math.floor(2 + statLevel * 2 + originalStats.hpRegen / 20);
         }
         else if (stat == "Uprade Armour"){
-            stats.armour += Math.floor(1 + (statLevel) / 2 + Math.pow(statLevel, 1.1) / 5);
+            stats.armour += Math.floor(1 + statLevel / 2 + originalStats.armour / 40);
         }
         else if (stat == "Uprade Crit Chance"){
             stats.critChance += 2.5;
@@ -616,11 +820,11 @@ document.addEventListener('DOMContentLoaded', () => {
     function levelUpAfterChoosing(){
         levelUpPending = false;
         stats.level++;
-        stats.physicalDamage += Math.floor(2 + stats.level / 4);
-        stats.armour += 1;
-        stats.hpRegen += 1;
-        stats.hp += Math.floor(10 + stats.level);
-        stats.maxHp += Math.floor(10 + stats.level);
+        stats.physicalDamage += Math.floor(1 + stats.level / 3 + originalStats.physicalDamage / 5);
+        stats.armour += Math.floor(1 + stats.level / 8 + originalStats.armour / 40);
+        stats.hpRegen += Math.floor(1 + stats.level / 15 + originalStats.hpRegen / 20);
+        stats.hp += Math.floor(5 + 1.5 * stats.level + originalStats.hp / 150);
+        stats.maxHp += Math.floor(5 + 1.5 * stats.level + originalStats.maxHp / 150);
         stats.exp -= stats.expThreshold;
         stats.expThreshold = calculateExpThreshold();
         updateStatsDisplay();
@@ -636,11 +840,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function calculateExpThreshold() {
-        return originalStats.expThreshold + Math.floor(originalStats.expThreshold * (stats.level) / 5 + originalStats.expThreshold * Math.pow(stats.level, 2) / 10);
+        return originalStats.expThreshold + Math.floor(originalStats.expThreshold * (stats.level) / 4 + originalStats.expThreshold * Math.pow(stats.level, 2) / 10);
     }
 
     function removeEnemy(enemy) {
-        stats.exp += enemy.stats.exp;
+        stats.exp += Math.floor(enemy.stats.exp * stats.expGain);
         updateStatsDisplay();
         if (stats.exp >= stats.expThreshold) {
             levelUp();
@@ -684,10 +888,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function showAbilityChoice(){
         abilityChoices.style.display = 'flex';
+        console.clear();
         if(abilityLevelThreshold.includes(stats.level)){
             let n = 1;
             let abilities = getAbilities(abilityList);
             let abilityText = "";
+            console.log(abilities);
             abilities.forEach(element => {
                 let i = 0;
                 let description = abilityList[element].text.replace(/\?\?/g, (match, index) => {
@@ -703,8 +909,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         else{
             let n = 1;
-            let randomAbilities = getRandomStats(statsList, 3);
+            let randomAbilities = getRandomStats(statsList, 4);
             let abilityText = "";
+            console.log(randomAbilities);
             randomAbilities.forEach(element => {
                 abilityText += "<button class=\"stats-button button-keys\" onclick=\"selectStat('" + element + "')\">" + n + ": " + element + " | Level: " + statsList[element].level + "</button>";
                 n++;
@@ -716,12 +923,11 @@ document.addEventListener('DOMContentLoaded', () => {
     function initVariable(){
         enemies.length = 0;
         bullets.length = 0;
-        originalStats = JSON.parse(JSON.stringify(stats));
         originalEnemyStats = JSON.parse(JSON.stringify(enemyStats));
         originalStatsList = JSON.parse(JSON.stringify(statsList));
         originalAbilityList = JSON.parse(JSON.stringify(abilityList));
 
-        for(var i = 0; i < 20; i++){
+        for(var i = 0; i < 25; i++){
             abilityLevelThreshold.push(9 + 10 * i);
         }
     }
@@ -730,7 +936,6 @@ document.addEventListener('DOMContentLoaded', () => {
         cancelAnimationFrame(gameLoopId);
         gamePaused = false;
         gameOver = false;
-        stats = JSON.parse(JSON.stringify(originalStats));
         enemyStats = JSON.parse(JSON.stringify(originalEnemyStats));
         statsList = JSON.parse(JSON.stringify(originalStatsList));
         abilityList = JSON.parse(JSON.stringify(originalAbilityList));
@@ -749,12 +954,11 @@ document.addEventListener('DOMContentLoaded', () => {
         rareEnemySpawnTime = Date.now();
         eliteSpawnTime = Date.now();
         bossSpawnTime = Date.now();
+        attackSpeedBuffTime = Date.now();
         elapsedSeconds = 0;
         currentDifficultyLevel = 0;
         levelUpPending = false;
-        updateStatsDisplay();
-        gameOverOverlay.style.display = 'none'; // Hide game over overlay
-        gameLoop();
+        showCharacterSelection();
     }
 
     function pauseOrResumeGame(){
@@ -769,6 +973,7 @@ document.addEventListener('DOMContentLoaded', () => {
             eliteSpawnTime += elapsedTime;
             rareEnemySpawnTime += elapsedTime;
             normalSpawnTime += elapsedTime;
+            attackSpeedBuffTime += elapsedTime;
             healthRegenTime += elapsedTime;
             enemies.forEach(enemy => {
                 enemyAttackCooldown[enemy.element.id] += elapsedTime;
@@ -778,7 +983,7 @@ document.addEventListener('DOMContentLoaded', () => {
             bullets.forEach(bullet => {
                 moveBullet(bullet, bullet.targetEnemy);
             });
-            gameLoop(); // Restart the game loop if unpaused
+            gameLoop();
         }
         else{
             pauseTime = Date.now();
@@ -796,49 +1001,31 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    var Timer = function(callback, delay) {
-        var timerId, start, remaining = delay;
-    
-        this.pause = function() {
-            window.clearTimeout(timerId);
-            timerId = null;
-            remaining -= Date.now() - start;
-        };
-    
-        this.resume = function() {
-            if (timerId) {
-                return;
-            }
-    
-            start = Date.now();
-            timerId = window.setTimeout(callback, remaining);
-        };
-    
-        this.resume();
-    };
-
-    function uuidv4() {
-        return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, c =>
-          (+c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> +c / 4).toString(16)
-        );
-      }
-
     document.addEventListener('keydown', (event) => {
-        if (gameOver && !gamePaused) { // Restart game on any key press when game is over
+        if (gameOver && !gamePaused) {
             restartGame();
         }
-        else if (event.key === 'Escape') { // Change pause key to ESC
+        else if (event.key === 'Escape' && !characterSelection) {
             if (levelUpPending) return;
             pauseOrResumeGame();
         }
         else if (event.key >= '1' && event.key <= '9') {
             const buttonIndex = parseInt(event.key) - 1;
+            if(characterSelection){
+                let buttons = charaterListDisplay.querySelectorAll('.character-button');
 
-            const buttons = abilityButtonWrapper.querySelectorAll('.button-keys');
+                if (buttonIndex < buttons.length) {
+                    const selectedButton = buttons[buttonIndex]; 
+                    selectedButton.click();
+                }
+            }
+            else{
+                let buttons = abilityButtonWrapper.querySelectorAll('.button-keys');
 
-            if (buttonIndex < buttons.length) {
-                const selectedButton = buttons[buttonIndex]; 
-                selectedButton.click();
+                if (buttonIndex < buttons.length) {
+                    const selectedButton = buttons[buttonIndex]; 
+                    selectedButton.click();
+                }
             }
         }
     });
@@ -850,6 +1037,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
       
     window.addEventListener('blur', function() {
-        if(!gameOver && !gamePaused) pauseOrResumeGame();
+        //if(!gameOver && !gamePaused && !characterSelection) pauseOrResumeGame();
     });
 });
