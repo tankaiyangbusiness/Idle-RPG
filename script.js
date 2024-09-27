@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 hpRegen: 3,
                 level: 1,
                 exp: 0,
-                expGain: 1.5,
+                expGain: 1.25,
                 expThreshold: 8,
                 buffList: {},
             },
@@ -776,13 +776,13 @@ document.addEventListener('DOMContentLoaded', () => {
     window.selectStat = function(stat) {
         statLevel = statsList[stat].level + 1;
         if(stat == "Uprade Damage"){
-            stats.physicalDamage += Math.floor(1 + originalStats.physicalDamage / 3 + statLevel / 2);
+            stats.physicalDamage += Math.floor(1 + originalStats.physicalDamage / 3 + statLevel);
         }          
         else if (stat == "Uprade AoE"){
             stats.attackRange += 15;
         }
         else if (stat == "Uprade Attack Speed")
-            stats.attackSpeed += 0.05 + originalStats.attackSpeed / 30;
+            stats.attackSpeed += 0.05 + originalStats.attackSpeed / 60;
         else if (stat == "Uprade HP (Recover 20% Life)"){
             stats.hp += Math.floor(5 + originalStats.hp / 100 * (statLevel) + statLevel * (Math.log(statLevel * 1.5 + 1)));
             stats.maxHp += Math.floor(5 + originalStats.hp / 100 * (statLevel) + statLevel * (Math.log(statLevel * 1.5 + 1)));
@@ -823,7 +823,7 @@ document.addEventListener('DOMContentLoaded', () => {
         stats.physicalDamage += Math.floor(1 + stats.level / 3 + originalStats.physicalDamage / 5);
         stats.armour += Math.floor(1 + stats.level / 8 + originalStats.armour / 40);
         stats.hpRegen += Math.floor(1 + stats.level / 15 + originalStats.hpRegen / 20);
-        stats.hp += Math.floor(5 + 1.5 * stats.level + originalStats.hp / 150);
+        stats.hp += Math.floor(5 + stats.level + originalStats.hp / 150);
         stats.maxHp += Math.floor(5 + 1.5 * stats.level + originalStats.maxHp / 150);
         stats.exp -= stats.expThreshold;
         stats.expThreshold = calculateExpThreshold();
